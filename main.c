@@ -72,7 +72,6 @@ int main(void) {
     char buffer[1024] = {0};
 
     struct pollfd pfds[6];
-    struct sockaddr_in ips[6];
 
     pfds[0].fd = sockfd;
     pfds[0].events = POLLIN;
@@ -91,12 +90,8 @@ int main(void) {
                     } else {
                         pfds[index].fd = newfd;
                         pfds[index].events = POLLIN;
-                        char ipstr[INET6_ADDRSTRLEN];
-                        struct sockaddr_in *sin = (struct sockaddr_in *)&their_addr;
-                        inet_ntop(AF_INET, &sin->sin_addr, ipstr, sizeof ipstr);
-                        ips[index] = *sin;
                         index++;
-                        printf("New connection: Client %d at %s\n", index-1, ipstr);
+                        printf("New connection: Client %d\n", index-1);
                     }
                 }
                 continue;
@@ -104,8 +99,6 @@ int main(void) {
             if (!(pfds[i].revents & POLLIN)) {
                 continue;
             }
-            //printf("Client %d at %s is ready to read\n", i, inet_ntoa(ips[i].sin_addr));
-
             int bytes_read = recv(pfds[i].fd, buffer, sizeof(buffer), 0);
 
             switch (bytes_read) {
@@ -120,11 +113,11 @@ int main(void) {
                     break;
                 default:
                     clean_buffer(buffer, bytes_read);
-                printf("Client %d at %s said: %s\n", i, inet_ntoa(ips[i].sin_addr), buffer);
+                printf("Client %d said: %s\n", i, buffer);
                 for (int j = 1; j < index; j++) {
                     if (i != j) {
                         int bytes_sent = send(pfds[j].fd, buffer, bytes_read, 0);
-                        printf("Sent %d bytes to client %d at %s\n", bytes_sent, j, inet_ntoa(ips[j].sin_addr));
+                        printf("Sent %d bytes to client %d\n", bytes_sent, j);
                     }
                 }
                 break;
